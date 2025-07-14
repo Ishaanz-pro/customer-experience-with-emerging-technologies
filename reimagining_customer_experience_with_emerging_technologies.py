@@ -19,19 +19,32 @@ st.markdown(
     '''
     <style>
     body {
-        background: linear-gradient(to right, #ffe4e1, #f0f8ff);
+        background: linear-gradient(to right, #ff7e5f, #feb47b);
+        font-family: 'Arial', sans-serif;
     }
     .big-title {
         font-size: 3em;
         font-weight: bold;
-        color: #ff4b4b;
+        color: #ffffff;
         text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
     .tagline {
         font-size: 1.5em;
         font-weight: 500;
         text-align: center;
-        color: #444;
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    .motion-box {
+        transition: transform 0.3s;
+        border-radius: 15px;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .motion-box:hover {
+        transform: scale(1.05);
     }
     </style>
     ''',
@@ -98,16 +111,18 @@ if query or price_limit:
         cols = st.columns(3)
         for i, (_, row) in enumerate(results.iterrows()):
             with cols[i % 3]:
+                st.markdown('<div class="motion-box">', unsafe_allow_html=True)
                 try:
                     st.image(row["image_url"], width=200)
                 except:
                     st.image("https://via.placeholder.com/200x200?text=No+Image", width=200)
                 st.markdown(f"**{row['title']}**")
-                st.markdown(f"💰 ₹{row['numeric_price']}  
-🏷️ {row['category']}")
+                st.markdown(f"💰 ₹{row['numeric_price']}  \n🏷️ {row['category']}")
                 st.markdown(f"🎨 {row['color']} | 🧵 {row['material']}")
                 st.markdown(f"⭐ {row['rating']}/5")
                 st.caption(row["description"])
+                st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("🚀 Built by Team AI Avengers for Walmart Hackathon 2025")
+
