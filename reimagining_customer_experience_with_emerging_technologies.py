@@ -19,19 +19,20 @@ st.markdown(
     '''
     <style>
     body {
-        background: linear-gradient(135deg, #f0f4f8, #d9e4f5);
+        background-color: #000000;  /* Black background */
+        color: #ffffff;  /* White text */
         font-family: 'Arial', sans-serif;
     }
     .title {
         font-size: 3em;
         font-weight: bold;
-        color: #2c3e50;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 20px;
     }
     .subtitle {
         font-size: 1.5em;
-        color: #34495e;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 40px;
     }
@@ -39,16 +40,16 @@ st.markdown(
         transition: transform 0.3s, box-shadow 0.3s;
         border-radius: 15px;
         padding: 20px;
-        background-color: #ffffff;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        background-color: #2c3e50;  /* Darker card background */
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
         text-align: center;
     }
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
     }
     .rating {
-        color: #f39c12;
+        color: #f39c12;  /* Gold color for ratings */
     }
     </style>
     ''',
