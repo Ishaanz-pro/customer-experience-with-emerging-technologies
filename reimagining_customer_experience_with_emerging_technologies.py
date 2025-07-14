@@ -101,6 +101,10 @@ def filter_products(q):
         result = result[result["description"].str.lower().str.contains("gym")]
     if "red" in q:
         result = result[result["color"].str.lower().str.contains("red")]
+    if "blue" in q:
+        result = result[result["color"].str.lower().str.contains("blue")]
+    if "green" in q:
+        result = result[result["color"].str.lower().str.contains("green")]
     if "under" in q:
         result = result[result["numeric_price"] < max_price]
     return result.head(9)
@@ -119,7 +123,7 @@ if query:
         for i, (_, row) in enumerate(matches.iterrows()):
             with cols[i % 3]:
                 st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                st.image(row["image_url"], width=180)
+                st.image(row["image_url"], width=180)  # Display the product image
                 st.markdown(f"**{row['title']}**")
                 st.markdown(f"💰 {row['price']}  \n🏷️ <img src='https://img.icons8.com/ios-filled/50/ffffff/category.png' class='icon'/> {row['category']}")
                 st.markdown(f"🎨 <img src='https://img.icons8.com/ios-filled/50/ffffff/color-palette.png' class='icon'/> {row['color']} | 🧵 <img src='https://img.icons8.com/ios-filled/50/ffffff/fabric.png' class='icon'/> {row['material']}")
