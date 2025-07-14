@@ -9,91 +9,51 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 
-# Load product dataset
+# Load data and prepare
 df = pd.read_csv("retail_products_100.csv")
 df["numeric_price"] = df["price"].str.replace("₹", "").str.replace(",", "").astype(int)
 
-# Page configuration
-st.set_page_config(page_title="🛍️ SmartShop Assistant", layout="wide")
-st.markdown(
-    '''
-    <style>
-    body {
-        background-color: #000000;  /* Black background */
-        color: #ffffff;  /* White text */
-        font-family: 'Arial', sans-serif;
-    }
-    .title {
-        font-size: 3em;
-        font-weight: bold;
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .subtitle {
-        font-size: 1.5em;
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    .product-card {
-        transition: transform 0.3s, box-shadow 0.3s;
-        border-radius: 15px;
-        padding: 20px;
-        background-color: #2c3e50;  /* Darker card background */
-        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
-        text-align: center;
-        opacity: 0;  /* Start hidden for animation */
-        animation: fadeIn 0.5s forwards;  /* Fade-in animation */
-    }
-    .product-card:hover {
-        transform: scale(1.05) translateY(-5px);  /* Scale and lift on hover */
-        box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
-    }
-    .rating {
-        color: #f39c12;  /* Gold color for ratings */
-    }
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    .icon {
-        width: 20px;  /* Set icon size */
-        vertical-align: middle;  /* Align icons with text */
-        margin-right: 5px;  /* Space between icon and text */
-    }
-    </style>
-    ''',
-    unsafe_allow_html=True
-)
+# Page config and dark background
+st.set_page_config(page_title="SmartShop AI", layout="wide")
+st.markdown("""
+<style>
+body {
+    background-color: #0d1117;
+    color: #e6edf3;
+}
+.stApp {
+    background-color: #0d1117;
+    color: #e6edf3;
+}
+.chat-input {
+    background-color: #161b22 !important;
+    color: white;
+}
+h1, h2, h3 {
+    color: #58a6ff;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Header
-st.markdown('<div class="title">🛍️ SmartShop – AI Shopping Assistant</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Describe what you\'re looking for (e.g. *red waterproof gym shoes under ₹3000*)</div>', unsafe_allow_html=True)
+# Title
+st.title("🛍️ SmartShop – Your AI Shopping Assistant")
+st.markdown("#### Type your query like `red gym shoes under 2000` and I'll fetch the best options for you!")
 
-# Input query
-query = st.text_input("🧠 Your Shopping Query:")
+# Chat-based input
+query = st.chat_input("What are you looking for?")
 
-# Price range slider
-min_price, max_price = st.slider("Select your price range:", 0, 5000, (0, 3000))
-
-# Simulate AI Response
+# Generate smart AI-style response
 def generate_response(q):
     q = q.lower()
-    if "budget" in q or "under" in q:
-        return "🧾 Here are some budget-friendly options:"
-    elif "gym" in q:
-        return "💪 These products are great for gym and fitness training!"
-    elif "eco" in q or "recycled" in q:
-        return "🌱 Here are eco-friendly products just for you:"
-    else:
-        return "🎯 Here are some smart recommendations based on your input:"
+    if "under" in q:
+        return "💸 Great! Let me find budget-friendly options for you."
+    if "gym" in q:
+        return "🏋️‍♀️ Looking for gym gear? You're in shape!"
+    if "eco" in q or "recycled" in q:
+        return "🌿 Awesome! You care about the planet!"
+    return "🛍️ Here's what I think you'll like."
 
-# Filter logic
+# Filter products based on query
 def filter_products(q):
     q = q.lower()
     result = df.copy()
@@ -101,35 +61,37 @@ def filter_products(q):
         result = result[result["description"].str.lower().str.contains("gym")]
     if "red" in q:
         result = result[result["color"].str.lower().str.contains("red")]
-    if "blue" in q:
-        result = result[result["color"].str.lower().str.contains("blue")]
-    if "green" in q:
-        result = result[result["color"].str.lower().str.contains("green")]
-    if "under" in q:
-        result = result[result["numeric_price"] < max_price]
+    for amt in [1000, 1500, 2000, 2500, 3000]:
+        if f"under {amt}" in q:
+            result = result[result["numeric_price"] <= amt]
+            break
     return result.head(9)
 
-# Handle user input
+# Display interaction
 if query:
-    st.subheader("🤖 AI Assistant:")
-    st.markdown(generate_response(query))
+    with st.chat_message("user"):
+        st.markdown(query)
 
-    matches = filter_products(query)
-    if matches.empty:
-        st.warning("🚫 No matching products found.")
+    with st.chat_message("assistant"):
+        st.markdown(generate_response(query))
+
+    results = filter_products(query)
+    if results.empty:
+        st.warning("❌ No matching products found. Try changing keywords.")
     else:
-        st.subheader("🛍️ Products You May Like:")
+        st.subheader("🛒 Products You Might Love:")
         cols = st.columns(3)
-        for i, (_, row) in enumerate(matches.iterrows()):
+        for i, (_, row) in enumerate(results.iterrows()):
             with cols[i % 3]:
-                st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                st.image(row["image_url"], width=180)  # Display the product image
+                try:
+                    st.image(row["image_url"], width=200)
+                except:
+                    st.image("https://via.placeholder.com/200x200?text=No+Image", width=200)
                 st.markdown(f"**{row['title']}**")
-                st.markdown(f"💰 {row['price']}  \n🏷️ <img src='https://img.icons8.com/ios-filled/50/ffffff/category.png' class='icon'/> {row['category']}")
-                st.markdown(f"🎨 <img src='https://img.icons8.com/ios-filled/50/ffffff/color-palette.png' class='icon'/> {row['color']} | 🧵 <img src='https://img.icons8.com/ios-filled/50/ffffff/fabric.png' class='icon'/> {row['material']}")
-                st.markdown(f"<span class='rating'>⭐ {row['rating']}/5</span>", unsafe_allow_html=True)
-                st.caption(row['description'])
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(f"💰 ₹{row['numeric_price']}  \n🏷️ {row['category']}")
+                st.markdown(f"🎨 {row['color']} | 🧵 {row['material']}")
+                st.markdown(f"⭐ {row['rating']}/5")
+                st.caption(row["description"])
 
 st.markdown("---")
-st.caption("🚀 Built by Team SmartShop for Retail Hackathon 2025")
+st.caption("🚀 Built with ❤️ by Team SmartShop for Retail Hackathon 2025")
