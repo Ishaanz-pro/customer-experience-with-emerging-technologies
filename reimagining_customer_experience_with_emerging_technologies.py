@@ -65,4 +65,4 @@ if query:
                 st.caption(row['description'])
 
 st.markdown("---")
-st.caption("Built by Team SmartShop for Retail Hackathon 2025")
+st.caption("Built by Team AI Avengers for Walmart Hackathon 2025")
