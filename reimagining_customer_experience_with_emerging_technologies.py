@@ -11,27 +11,89 @@ import pandas as pd
 
 # Load product dataset
 df = pd.read_csv("retail_products_100.csv")
+df["numeric_price"] = df["price"].str.replace("₹", "").str.replace(",", "").astype(int)
 
+# Page configuration
 st.set_page_config(page_title="🛍️ SmartShop Assistant", layout="wide")
-st.title("🛍️ SmartShop – AI Shopping Assistant")
-st.markdown("Describe what you're looking for (e.g. *red waterproof gym shoes under ₹3000*)")
+st.markdown(
+    '''
+    <style>
+    body {
+        background-color: #000000;  /* Black background */
+        color: #ffffff;  /* White text */
+        font-family: 'Arial', sans-serif;
+    }
+    .title {
+        font-size: 3em;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .subtitle {
+        font-size: 1.5em;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .product-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 15px;
+        padding: 20px;
+        background-color: #2c3e50;  /* Darker card background */
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        text-align: center;
+        opacity: 0;  /* Start hidden for animation */
+        animation: fadeIn 0.5s forwards;  /* Fade-in animation */
+    }
+    .product-card:hover {
+        transform: scale(1.05) translateY(-5px);  /* Scale and lift on hover */
+        box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+    }
+    .rating {
+        color: #f39c12;  /* Gold color for ratings */
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    .icon {
+        width: 20px;  /* Set icon size */
+        vertical-align: middle;  /* Align icons with text */
+        margin-right: 5px;  /* Space between icon and text */
+    }
+    </style>
+    ''',
+    unsafe_allow_html=True
+)
+
+# Header
+st.markdown('<div class="title">🛍️ SmartShop – AI Shopping Assistant</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Describe what you\'re looking for (e.g. *red waterproof gym shoes under ₹3000*)</div>', unsafe_allow_html=True)
 
 # Input query
 query = st.text_input("🧠 Your Shopping Query:")
 
+# Price range slider
+min_price, max_price = st.slider("Select your price range:", 0, 5000, (0, 3000))
+
 # Simulate AI Response
 def generate_response(q):
     q = q.lower()
-    if "budget" in q or "under ₹3000" in q:
-        return "🧾 Here are some budget-friendly options under ₹3000:"
+    if "budget" in q or "under" in q:
+        return "🧾 Here are some budget-friendly options:"
     elif "gym" in q:
-        return "💪 These shoes are great for gym and fitness training!"
+        return "💪 These products are great for gym and fitness training!"
     elif "eco" in q or "recycled" in q:
         return "🌱 Here are eco-friendly products just for you:"
     else:
         return "🎯 Here are some smart recommendations based on your input:"
 
-# Filter logic (mock intent parsing)
+# Filter logic
 def filter_products(q):
     q = q.lower()
     result = df.copy()
@@ -39,8 +101,8 @@ def filter_products(q):
         result = result[result["description"].str.lower().str.contains("gym")]
     if "red" in q:
         result = result[result["color"].str.lower().str.contains("red")]
-    if "under ₹3000" in q or "budget" in q:
-        result = result[result["price"].str.replace("₹", "").astype(int) < 3000]
+    if "under" in q:
+        result = result[result["numeric_price"] < max_price]
     return result.head(9)
 
 # Handle user input
@@ -50,18 +112,20 @@ if query:
 
     matches = filter_products(query)
     if matches.empty:
-        st.warning("No matching products found.")
+        st.warning("🚫 No matching products found.")
     else:
         st.subheader("🛍️ Products You May Like:")
         cols = st.columns(3)
         for i, (_, row) in enumerate(matches.iterrows()):
             with cols[i % 3]:
+                st.markdown('<div class="product-card">', unsafe_allow_html=True)
                 st.image(row["image_url"], width=180)
                 st.markdown(f"**{row['title']}**")
-                st.markdown(f"💰 {row['price']}  \n🏷️ {row['category']}")
-                st.markdown(f"🎨 {row['color']} | 🧵 {row['material']}")
-                st.markdown(f"⭐ {row['rating']}/5")
+                st.markdown(f"💰 {row['price']}  \n🏷️ <img src='https://img.icons8.com/ios-filled/50/ffffff/category.png' class='icon'/> {row['category']}")
+                st.markdown(f"🎨 <img src='https://img.icons8.com/ios-filled/50/ffffff/color-palette.png' class='icon'/> {row['color']} | 🧵 <img src='https://img.icons8.com/ios-filled/50/ffffff/fabric.png' class='icon'/> {row['material']}")
+                st.markdown(f"<span class='rating'>⭐ {row['rating']}/5</span>", unsafe_allow_html=True)
                 st.caption(row['description'])
+                st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("Built by Team SmartShop for Retail Hackathon 2025")
+st.caption("🚀 Built by Team SmartShop for Retail Hackathon 2025")
