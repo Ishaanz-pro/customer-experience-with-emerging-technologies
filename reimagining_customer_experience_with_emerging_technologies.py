@@ -8,6 +8,7 @@ Original file is located at
 """
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Load and clean data
 df = pd.read_csv("retail_products_100.csv")
@@ -54,13 +55,17 @@ st.markdown(
 # Header
 st.markdown('<div class="big-title">SmartShop 🛒</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI-powered fashion and product companion ✨</div>', unsafe_allow_html=True)
-st.markdown("#### Ask anything like 'red shoes under 2000 for gym' or just pick your budget from below")
 
-# Chat input
-query = st.chat_input("Type your shopping intent (e.g. waterproof shoes for gym under 1500)")
+# Price range slider
+min_price, max_price = st.slider("Select your price range:", 0, 5000, (0, 3000))
 
-# Price filter dropdown
-price_limit = st.selectbox("Or choose a price limit:", [None, 1000, 1500, 2000, 2500, 3000], index=0)
+# Category filter
+categories = df['category'].unique().tolist()
+selected_category = st.selectbox("Select a category:", ["All"] + categories)
+
+# Color filter
+colors = df['color'].unique().tolist()
+selected_color = st.selectbox("Select a color:", ["All"] + colors)
 
 # Generate AI-style response
 def generate_response(q):
@@ -75,35 +80,32 @@ def generate_response(q):
         return "🛍️ Here's what I think you'll love:"
 
 # Filtering logic
-def filter_products(q, limit):
-    q = q.lower()
+def filter_products(limit, category, color):
     result = df.copy()
-    if "gym" in q:
-        result = result[result["description"].str.lower().str.contains("gym")]
-    if "red" in q:
-        result = result[result["color"].str.lower().str.contains("red")]
-    if "eco" in q or "recycled" in q:
-        result = result[result["description"].str.lower().str.contains("eco|recycled|organic")]
-    if "waterproof" in q:
-        result = result[result["description"].str.lower().str.contains("waterproof")]
-    if any(f"under {p}" in q for p in [1000,1500,2000,2500,3000]):
-        val = int([p for p in [1000,1500,2000,2500,3000] if f"under {p}" in q][0])
-        result = result[result["numeric_price"] <= val]
-    if limit:
-        result = result[result["numeric_price"] <= limit]
+    result = result[(result["numeric_price"] >= limit[0]) & (result["numeric_price"] <= limit[1])]
+    if category != "All":
+        result = result[result["category"] == category]
+    if color != "All":
+        result = result[result["color"] == color]
     return result.head(9)
 
+# Display product statistics
+def display_statistics():
+    category_counts = df['category'].value_counts()
+    plt.figure(figsize=(10, 5))
+    plt.bar(category_counts.index, category_counts.values, color='skyblue')
+    plt.title('Product Categories Distribution')
+    plt.xlabel('Categories')
+    plt.ylabel('Number of Products')
+    st.pyplot(plt)
+
+# Display statistics
+st.markdown("### 📊 Product Statistics")
+display_statistics()
+
 # Chat interface
-if query or price_limit:
-    if query:
-        with st.chat_message("user"):
-            st.markdown(query)
-        with st.chat_message("assistant"):
-            st.markdown(generate_response(query))
-        results = filter_products(query, price_limit)
-    else:
-        st.markdown("### 💰 Showing products under ₹{}:".format(price_limit))
-        results = filter_products("", price_limit)
+if st.button("Show Products"):
+    results = filter_products((min_price, max_price), selected_category, selected_color)
 
     if results.empty:
         st.warning("🚫 No products found for your query.")
@@ -125,4 +127,5 @@ if query or price_limit:
 
 st.markdown("---")
 st.caption("🚀 Built by Team AI Avengers for Walmart Hackathon 2025")
+
 
