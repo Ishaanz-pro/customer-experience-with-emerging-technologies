@@ -13,26 +13,35 @@ import pandas as pd
 # Load product dataset
 df = pd.read_csv("retail_products_100.csv")
 
-st.set_page_config(page_title="🛍️ SmartShop Assistant", layout="wide")
-st.title("🛍️ SmartShop – AI Shopping Assistant")
-st.markdown("Describe what you're looking for (e.g. *red waterproof gym shoes under ₹3000*)")
+# Clean price column
+df["numeric_price"] = df["price"].str.replace("₹", "").str.replace(",", "").astype(int)
+
+# App configuration
+st.set_page_config(page_title="🛍️ SmartShop AI", layout="wide")
+st.title("🤖 SmartShop – Your Personal AI Shopping Assistant")
+
+# Welcome message
+with st.chat_message("assistant"):
+    st.markdown("Hi! 👋 I’m your SmartShop Assistant. Tell me what you want and I’ll find the best deals!")
 
 # Input query
-query = st.text_input("🧠 Your Shopping Query:")
+query = st.chat_input("What are you shopping for today? (e.g. red shoes under 3000 for gym)")
 
-# Simulate AI Response
+# Simulated AI logic
 def generate_response(q):
     q = q.lower()
-    if "budget" in q or "under ₹3000" in q:
-        return "🧾 Here are some budget-friendly options under ₹3000:"
+    if "budget" in q or "under 3000" in q or "cheap" in q:
+        return "🧾 Sure! Here are some budget-friendly options under ₹3000."
     elif "gym" in q:
-        return "💪 These shoes are great for gym and fitness training!"
+        return "💪 I found shoes that are great for gym and workouts!"
     elif "eco" in q or "recycled" in q:
-        return "🌱 Here are eco-friendly products just for you:"
+        return "🌱 Here's a selection of eco-friendly products."
+    elif "waterproof" in q:
+        return "☔ Found items that can survive rain and splashes!"
     else:
-        return "🎯 Here are some smart recommendations based on your input:"
+        return "🛍️ Here are some popular picks based on your description."
 
-# Filter logic (mock intent parsing)
+# Filter logic
 def filter_products(q):
     q = q.lower()
     result = df.copy()
@@ -40,29 +49,46 @@ def filter_products(q):
         result = result[result["description"].str.lower().str.contains("gym")]
     if "red" in q:
         result = result[result["color"].str.lower().str.contains("red")]
-    if "under ₹3000" in q or "budget" in q:
-        result = result[result["price"].str.replace("₹", "").astype(int) < 3000]
+    if "under 3000" in q or "budget" in q or "cheap" in q:
+        result = result[result["numeric_price"] < 3000]
+    if "eco" in q or "recycled" in q:
+        result = result[result["description"].str.lower().str.contains("eco|recycled|organic")]
+    if "waterproof" in q:
+        result = result[result["description"].str.lower().str.contains("waterproof")]
     return result.head(9)
 
 # Handle user input
 if query:
-    st.subheader("🤖 AI Assistant:")
-    st.markdown(generate_response(query))
+    # Display user query
+    with st.chat_message("user"):
+        st.markdown(query)
 
+    # Assistant reply
+    response = generate_response(query)
+    with st.chat_message("assistant"):
+        st.markdown(response)
+
+    # Filter products
     matches = filter_products(query)
+
+    # Display results
     if matches.empty:
-        st.warning("No matching products found.")
+        with st.chat_message("assistant"):
+            st.warning("Hmm, I couldn't find any exact matches. Want to try different keywords?")
     else:
         st.subheader("🛍️ Products You May Like:")
         cols = st.columns(3)
         for i, (_, row) in enumerate(matches.iterrows()):
             with cols[i % 3]:
-                st.image(row["image_url"], width=180)
+                try:
+                    st.image(row["image_url"], width=200)
+                except:
+                    st.image("https://via.placeholder.com/200x200?text=No+Image", width=200)
                 st.markdown(f"**{row['title']}**")
-                st.markdown(f"💰 {row['price']}  \n🏷️ {row['category']}")
+                st.markdown(f"💰 ₹{row['numeric_price']}  \n🏷️ {row['category']}")
                 st.markdown(f"🎨 {row['color']} | 🧵 {row['material']}")
                 st.markdown(f"⭐ {row['rating']}/5")
                 st.caption(row['description'])
 
 st.markdown("---")
-st.caption("Built by Team AI Avengers for Walmart Hackathon 2025")
+st.caption("Built by Team AI Avengers 💥 for Walmart Hackathon 2025")
